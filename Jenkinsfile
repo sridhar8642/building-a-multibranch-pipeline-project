@@ -8,51 +8,66 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Running Build Stage...'
+                echo "Installing dependencies..."
                 bat 'npm install'
             }
         }
+
         stage('Test') {
             steps {
-                echo 'Running Test Stage...'
-                bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/test.sh'
+                echo "Running tests..."
+                bat(script: '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/test.sh', returnStatus: true)
             }
         }
+
         stage('Deliver for development') {
             when {
                 branch 'development'
             }
             steps {
-                echo 'Delivering for Development...'
+                echo "Delivering for development on branch: ${env.BRANCH_NAME}"
                 bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/deliver-for-development.sh'
+                input message: 'Finished using the web site? (Click "Proceed" to continue)' 
+                timeout(time: 5, unit: 'MINUTES') {
+                    bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/kill.sh'
+                }
             }
             post {
-                always {
-                    input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                    timeout(time: 5, unit: 'MINUTES') {
-                        echo 'Cleaning up development environment...'
-                        bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/kill.sh'
-                    }
+                success {
+                    echo "Development delivery succeeded."
+                }
+                failure {
+                    echo "Development delivery failed."
                 }
             }
         }
+
         stage('Deploy for production') {
             when {
                 branch 'production'
             }
             steps {
-                echo 'Deploying for Production...'
+                echo "Deploying for production on branch: ${env.BRANCH_NAME}"
                 bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/deploy-for-production.sh'
-            }
-            post {
-                always {
-                    input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                    timeout(time: 5, unit: 'MINUTES') {
-                        echo 'Cleaning up production environment...'
-                        bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/kill.sh'
-                    }
+                input message: 'Finished using the web site? (Click "Proceed" to continue)' 
+                timeout(time: 5, unit: 'MINUTES') {
+                    bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/kill.sh'
                 }
             }
+            post {
+                success {
+                    echo "Production deployment succeeded."
+                }
+                failure {
+                    echo "Production deployment failed."
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up after pipeline execution..."
         }
     }
 }
