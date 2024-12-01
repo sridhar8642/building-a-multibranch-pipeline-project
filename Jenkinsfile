@@ -16,7 +16,6 @@ pipeline {
                 bat '"C:\\Program Files\\Git\\bin\\bash.exe" ./jenkins/scripts/test.sh'
             }
         }
-
         stage('Deliver for development') {
             when {
                 branch 'development'
@@ -29,7 +28,6 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy for production') {
             when {
                 branch 'production'
