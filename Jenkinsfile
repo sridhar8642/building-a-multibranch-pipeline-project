@@ -15,11 +15,7 @@ pipeline {
         stage('Test') {
             steps {
                 // Ensure script is executable and then run it
-                bat '''
-                    "C:\\Program Files\\Git\\bin\\bash.exe" -c \"
-                    chmod +x ./jenkins/scripts/test.sh &&
-                    ./jenkins/scripts/test.sh\"
-                '''
+                bat '"C:\\Program Files\\Git\\bin\\bash.exe" -c "chmod +x ./jenkins/scripts/test.sh && ./jenkins/scripts/test.sh"'
             }
         }
     }
